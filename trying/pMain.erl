@@ -1,6 +1,9 @@
 -module(pMain).
--export([main/1]).
+-export([main/0]).
 
-main(NumUsers) ->
-  ServerID = spawn(pServer, server_fun, [NumUsers]),
+main() ->
+  ServerID = spawn(pServer, server_fun, []),
   io:fwrite("Server ID: ~p~n", [ServerID]).
+
+
+
