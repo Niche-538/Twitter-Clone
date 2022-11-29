@@ -7,10 +7,13 @@ main() ->
   io:fwrite("Server ID: ~p~n", [ServerID]),
 
   NumClients = 10,
-  MaxSubscribers = 10,
+  createUsers(NumClients,ServerID).
 
-  createUsers(NumClients,MaxSubscribers),
-  ServerID ! {atom}.
-
-createUsers(NumClients, MaxSubscribers) ->
-  io:fwrite("NumClients ~p MaxSubcribers: ~p~n", [NumClients,MaxSubscribers]).
+createUsers(NumClients,ServerID) ->
+  if
+    NumClients == 0 -> ok;
+    true ->
+      spawn(pClient, client_fun, [ServerID]),
+      io:fwrite("Loop Num Clients: ~p~n", [NumClients]),
+      createUsers(NumClients-1,ServerID)
+  end.
