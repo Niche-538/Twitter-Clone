@@ -2,14 +2,15 @@
 -export([main/0]).
 
 main() ->
+  %%Create Server Engine Node
   ServerID = spawn(pServer, server_fun, []),
   io:fwrite("Server ID: ~p~n", [ServerID]),
+
   NumClients = 10,
   MaxSubscribers = 10,
-  ets:new(user_table, [set, named_table]),
-  ets:insert(user_table, {pratik, 10,10}),
-  ets:lookup(user_table, 1),
+
+  createUsers(NumClients,MaxSubscribers),
   ServerID ! {atom}.
 
-
-
+createUsers(NumClients, MaxSubscribers) ->
+  io:fwrite("NumClients ~p MaxSubcribers: ~p~n", [NumClients,MaxSubscribers]).
