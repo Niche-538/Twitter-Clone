@@ -8,7 +8,6 @@ main() ->
 
   NumClients = 10,
   MaxSubscribers = 10,
-
   createUsers(NumClients,MaxSubscribers),
   ServerID ! {atom}.
 

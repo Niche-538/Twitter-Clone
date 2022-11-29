@@ -3,14 +3,13 @@
 
 server_fun()->
   io:fwrite("In Server~n"),
-%%  ets:new(user_table, [set, public, named_table]),
   loop().
 
 loop()->
   receive
     {atom} -> io:fwrite("Listening~n"),
-%%      ets:insert(user_table, {1, pratik}),
-      ets:lookup(user_table, pratik),
+      io:fwrite("~p~n",[ets:lookup(user_table, 1)]),
+      io:fwrite("~p~n",[ets:lookup(user_table, 2)]),
       io:fwrite("End~n")
   end,
   loop().
