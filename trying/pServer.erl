@@ -7,9 +7,8 @@ server_fun()->
 
 loop()->
   receive
-    {atom} -> io:fwrite("Listening~n"),
-      io:fwrite("~p~n",[ets:lookup(user_table, 1)]),
-      io:fwrite("~p~n",[ets:lookup(user_table, 2)]),
-      io:fwrite("End~n")
+    {registerUser} ->
+      io:fwrite("Registering~n"),
+      io:fwrite("Registration Successful~n")
   end,
   loop().
