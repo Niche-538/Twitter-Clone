@@ -7,8 +7,10 @@ server_fun()->
 
 loop()->
   receive
-    {registerUser} ->
-      io:fwrite("Registering~n"),
-      io:fwrite("Registration Successful~n")
+    {registerUser,{UserName, PID}} ->
+      ets:insert(clients_registry, {UserName, PID}),
+      ets:insert(tweets, {UserName, []}),
+      ets:insert(subscribed_to, {UserName, []}),
+      PID ! {acknowledgement}
   end,
   loop().

@@ -7,13 +7,16 @@ main() ->
   io:fwrite("Server ID: ~p~n", [ServerID]),
 
   NumClients = 10,
-  createUsers(NumClients,ServerID).
+  TotalSubscriber = 5,
+  createUsers(NumClients,TotalSubscriber, ServerID, NumClients).
 
-createUsers(NumClients,ServerID) ->
+createUsers(NumClients,TotalSubscriber, ServerID, TotalClients) ->
   if
     NumClients == 0 -> ok;
     true ->
-      spawn(pClient, client_fun, [ServerID]),
-      io:fwrite("Loop Num Clients: ~p~n", [NumClients]),
-      createUsers(NumClients-1,ServerID)
+      UserName = "chew" ++ integer_to_list(NumClients),
+      TweetsNumber = trunc(TotalSubscriber/NumClients),
+      SubscribersNumber = TotalSubscriber,
+      spawn(pClient, client_fun, [ServerID, UserName,TweetsNumber,SubscribersNumber,0]),
+      createUsers(NumClients-1,TotalSubscriber, ServerID, TotalClients)
   end.
