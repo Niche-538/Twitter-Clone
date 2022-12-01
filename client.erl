@@ -1,4 +1,4 @@
--module(pClient).
+-module(client).
 -export([client_fun/5]).
 
 client_fun(ServerID, UserName, TweetsNumber, SubscribersNumber, ExistingUser) ->
@@ -33,9 +33,19 @@ loop(N, UserName, ServerID) ->
     loop(N - 1, UserName, ServerID).
 
 generate_unique_hashes(User, N) ->
-    BitcoinKey = User ++ integer_to_list(N),
-    <<BKey:256>> = crypto:hash(sha256, BitcoinKey),
-    _SHA_String = io_lib:format("~64.16.0b", [BKey]).
+    GeneratedHash = User ++ integer_to_list(N),
+    <<HashKey:256>> = crypto:hash(sha256, GeneratedHash),
+    _SHA_String = io_lib:format("~64.16.0b", [HashKey]).
 
 handle_client(UserName, TweetsNumber, SubscribersNumber, ServerID) ->
+    %%Subscribe
+    case  of
+          ->;
+end
+    %%Mention
+    %%Send Tweets
+    %%Retweet
+    %%Queries
+    %%Get all Tweets
+    %%Live View
     io:fwrite("Client Handled").

@@ -1,4 +1,4 @@
--module(pMain).
+-module(main).
 -export([main/3]).
 
 main(NumClients, SubscriberLimit, OfflineClientsPercentage) ->

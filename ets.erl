@@ -1,4 +1,4 @@
--module(pETS).
+-module(ets).
 -export([create_tables/0]).
 
 %%Create Public ETS Tables
