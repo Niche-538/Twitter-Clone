@@ -28,13 +28,14 @@ register_user(UserName, PID) ->
     end.
 
 tweet_processing(UserName, Tweet) ->
-    LookupTableResult = ets:lookup(tweet_table, UserName),
-    case LookupTableResult == [] of
+    TweetLookupTableResult = ets:lookup(tweet_table, UserName),
+    case TweetLookupTableResult == [] of
         true ->
             UpdatedTweet = lists:append([], [Tweet]),
             ets:insert(tweet_table, {UserName, UpdatedTweet});
         false ->
-            {_, PreviousTweetList} = lists:nth(1, LookupTableResult),
+            {_, PreviousTweetList} = lists:nth(1, TweetLookupTableResult),
             UpdatedTweet = lists:append(PreviousTweetList, [Tweet]),
             ets:insert(tweet_table, {UserName, UpdatedTweet})
     end.
+% Check for hashtags and mentions just like above, and add them to the hashtag and mentions table
