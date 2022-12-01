@@ -17,6 +17,6 @@ createUsers(Counter,SubscriberLimit, ServerID, NumClients) ->
       SubscribersNumber = trunc(SubscriberLimit/(NumClients-Counter+1))-1,
       io:fwrite("Subscriber Limit ~p~n",[SubscribersNumber]),
       PID = spawn(pClient, client_fun, [ServerID, UserName,TweetsNumber,SubscribersNumber,1]),
-%%      ets:insert(main_table,{UserName,PID}),
+      ets:insert(main_table,{UserName,PID}),
       createUsers(Counter-1, SubscriberLimit, ServerID, NumClients)
   end.
