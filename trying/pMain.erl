@@ -1,22 +1,22 @@
 -module(pMain).
--export([main/0]).
+-export([main/3]).
 
-main() ->
+main(NumClients,SubscriberLimit,OfflineClientsPercentage) ->
   %%Create Server Engine Node
   ServerID = spawn(pServer, server_fun, []),
   io:fwrite("Server ID: ~p~n", [ServerID]),
+  _OfflineClients = (OfflineClientsPercentage * 0.01) * NumClients,
+  createUsers(NumClients, SubscriberLimit, ServerID, NumClients).
 
-  NumClients = 10,
-  TotalSubscriber = 5,
-  createUsers(NumClients,TotalSubscriber, ServerID, NumClients).
-
-createUsers(NumClients,TotalSubscriber, ServerID, TotalClients) ->
+createUsers(Counter,SubscriberLimit, ServerID, NumClients) ->
   if
-    NumClients == 0 -> ok;
+    Counter == 0 -> ok;
     true ->
-      UserName = "chew" ++ integer_to_list(NumClients),
-      TweetsNumber = trunc(TotalSubscriber/NumClients),
-      SubscribersNumber = TotalSubscriber,
-      spawn(pClient, client_fun, [ServerID, UserName,TweetsNumber,SubscribersNumber,0]),
-      createUsers(NumClients-1,TotalSubscriber, ServerID, TotalClients)
+      UserName = "chew" ++ integer_to_list(Counter),
+      TweetsNumber = trunc(SubscriberLimit/Counter),
+      SubscribersNumber = trunc(SubscriberLimit/(NumClients-Counter+1))-1,
+      io:fwrite("Subscriber Limit ~p~n",[SubscribersNumber]),
+      PID = spawn(pClient, client_fun, [ServerID, UserName,TweetsNumber,SubscribersNumber,1]),
+      ets:insert(main_table,{UserName,PID}),
+      createUsers(Counter-1, SubscriberLimit, ServerID, NumClients)
   end.
