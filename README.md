@@ -1,4 +1,7 @@
 # Twitter-Clone
+## Member Names:
+  ### Anurag Patil
+  ### Pratik Kamble
 
 ## Project Summary:
 
