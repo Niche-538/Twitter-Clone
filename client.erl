@@ -28,7 +28,7 @@ loop(N, UserID, UserName, ServerID) ->
             UniqueHash = generate_unique_hashes(UserName, N),
             ServerID !
                 {tweets,
-                    {UserID, (UserName ++ "I am Tweeting some gibberish tag #" ++ UniqueHash), self()}}
+                    {UserID, (UserName ++ "I am Tweeting some gibberish tag #" ++ UniqueHash + "for @1"), self()}}
     end,
     loop(N - 1, UserID, UserName, ServerID).
 
