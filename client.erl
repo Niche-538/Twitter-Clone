@@ -31,7 +31,7 @@ loop(N, UserID, UserName, ServerID) ->
             ServerID !
                 {tweets,
                     {UserID,
-                        (UserName ++ "I am Tweeting some gibberish tag #" ++ UniqueHash + "for @1"),
+                        (UserName ++ "I am Tweeting some gibberish tag #HelloWorld for @1"),
                         self()}}
     end,
     loop(N - 1, UserID, UserName, ServerID).
@@ -53,10 +53,11 @@ handle_client(UserID, UserName, TweetsNumber, SubscribersNumber, ServerID) ->
     %%Mention
     MentionUser = trunc(rand:uniform(UserID)),
     ServerID !
-        {tweets, {UserID, "User" ++ UserName ++ "is a friend of User ID @" ++ MentionUser, self()}},
+%%        {tweets, {UserID, "User" ++ UserName ++ "is a friend of #HelloWorld User ID @" ++ MentionUser, self()}},
+    {tweets, {UserID, "User" ++ UserName ++ "is a friend of #HelloWorld User ID @1", self()}},
 
     %% Hash tag
-    ServerID ! {tweets, {UserID, "User " ++ UserName ++ "has a hashtag #HelloWorld", self()}},
+    ServerID ! {tweets, {UserID, "User " ++ UserName ++ "has a hashtag #HelloWorld @1", self()}},
 
     %%Send Tweets
     sendTweets(TweetsNumber, UserID, UserName, ServerID),
@@ -94,8 +95,7 @@ sendTweets(Counter, UserID, UserName, ServerID) ->
             ServerID !
                 {tweets,
                     {UserID,
-                        "User " ++ UserName ++ "tweets gibberish" ++
-                            generate_unique_hashes(UserID, Counter)}};
+                        "User " ++ UserName ++ "tweets gibberish #HelloWorld @1"}};
         false ->
             done
     end,
@@ -112,7 +112,7 @@ retweet_handler(UserID, UserName, ServerID) ->
                 false ->
                     ServerID !
                         {tweets,
-                            {UserID, "User:" ++ UserName ++ "Retweeting: " ++ ToRetweet, self()}}
+                            {UserID, "User:" ++ UserName ++ "#HelloWorld @1 Retweeting: " ++ ToRetweet, self()}}
             end
     end.
 

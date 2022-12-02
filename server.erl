@@ -30,7 +30,7 @@ loop() ->
     loop().
 
 register_user(UserID, UserName, PID) ->
-    ets:insert(client_table, {UserID, UserName, PID}),
+    ets:insert(client_table, {UserID, PID}),
     ets:insert(tweet_table, {UserID, []}),
     ets:insert(subscribed_to_table, {UserID, []}),
     case ets:lookup(subscriber_table, UserID) == [] of
@@ -56,7 +56,7 @@ tweet_processing(UserID, Tweet) ->
     end,
 
     % Check for hashtags and mentions just like above, and add them to the hashtag and mentions table
-    {_, HX} = re:run(Tweet, "#[a-zA-Z0-9]+"),
+    {_, HX} = re:run(Tweet, "#HelloWorld"),
     {HIndex, HLength} = lists:nth(1, HX),
     HashtagFound = string:substr(Tweet, HIndex, HLength),
 
@@ -71,7 +71,7 @@ tweet_processing(UserID, Tweet) ->
     end,
 
     %  Mentions
-    {_, MX} = re:run(Tweet, "@[a-zA-Z0-9]+"),
+    {_, MX} = re:run(Tweet, "@1"),
     {MIndex, MLength} = lists:nth(1, MX),
     MentionFound = string:substr(Tweet, MIndex, MLength),
 
@@ -86,14 +86,17 @@ tweet_processing(UserID, Tweet) ->
     end,
 
     % Send Tweets to Subscribers
-    {_, SubscribersList} = ets:lookup(subscriber_table, UserID),
+    SubscriberLookupTable = ets:lookup(subscriber_table, UserID),
+    {_, SubscribersList} = lists:nth(1, SubscriberLookupTable),
     case SubscribersList == [] of
         true ->
             done;
         false ->
             lists:foreach(
                 fun(ID) ->
-                    ID ! {ackLive, {Tweet}}
+                    FindPID = ets:lookup(client_table, ID),
+                    {_, PID} = lists:nth(1, FindPID),
+                    PID ! {ackLive, {Tweet}}
                 end,
                 SubscribersList
             )
@@ -144,7 +147,7 @@ getAllTweets(UserID, PID) ->
 subscribed_to_add(UserID, SubID) ->
     SubscribedToResult = ets:lookup(subscribed_to_table, UserID),
     {_, SubscribedToList} = lists:nth(1, SubscribedToResult),
-    UpdatedList = lists:append(SubscribedToList, SubID),
+    UpdatedList = lists:append(SubscribedToList, [SubID]),
     ets:insert(subscribed_to_table, {UserID, UpdatedList}).
 
 followers_to_add(UserID, SubID) ->
@@ -156,5 +159,5 @@ followers_to_add(UserID, SubID) ->
     end,
     FollowerResult = ets:lookup(subscriber_table, UserID),
     {_, FollowerList} = lists:nth(1, FollowerResult),
-    UpdatedList = lists:append(FollowerList, SubID),
+    UpdatedList = lists:append(FollowerList, [SubID]),
     ets:insert(subscriber_table, {UserID, UpdatedList}).
