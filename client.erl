@@ -27,19 +27,18 @@ loop(N, UserID, UserName, ServerID) ->
         N =< 0 ->
             ok;
         true ->
-            UniqueHash = generate_unique_hashes(UserName, N),
+            % UniqueHash = generate_unique_hashes(UserName, N),
             ServerID !
                 {tweets,
-                    {UserID,
-                        (UserName ++ "I am Tweeting some gibberish tag #HelloWorld for @1"),
+                    {UserID, (UserName ++ "I am Tweeting some gibberish tag #HelloWorld for @1"),
                         self()}}
     end,
     loop(N - 1, UserID, UserName, ServerID).
 
-generate_unique_hashes(User, N) ->
-    GeneratedHash = User ++ integer_to_list(N),
-    <<HashKey:256>> = crypto:hash(sha256, GeneratedHash),
-    _SHA_String = io_lib:format("~64.16.0b", [HashKey]).
+% generate_unique_hashes(User, N) ->
+%     GeneratedHash = User ++ integer_to_list(N),
+%     <<HashKey:256>> = crypto:hash(sha256, GeneratedHash),
+%     _SHA_String = io_lib:format("~64.16.0b", [HashKey]).
 
 handle_client(UserID, UserName, TweetsNumber, SubscribersNumber, ServerID) ->
     %%Subscribe
@@ -51,10 +50,10 @@ handle_client(UserID, UserName, TweetsNumber, SubscribersNumber, ServerID) ->
             done
     end,
     %%Mention
-    MentionUser = trunc(rand:uniform(UserID)),
+    % MentionUser = trunc(rand:uniform(UserID)),
     ServerID !
-%%        {tweets, {UserID, "User" ++ UserName ++ "is a friend of #HelloWorld User ID @" ++ MentionUser, self()}},
-    {tweets, {UserID, "User" ++ UserName ++ "is a friend of #HelloWorld User ID @1", self()}},
+        %%        {tweets, {UserID, "User" ++ UserName ++ "is a friend of #HelloWorld User ID @" ++ MentionUser, self()}},
+        {tweets, {UserID, "User " ++ UserName ++ "is a friend of #HelloWorld User ID @1", self()}},
 
     %% Hash tag
     ServerID ! {tweets, {UserID, "User " ++ UserName ++ "has a hashtag #HelloWorld @1", self()}},
@@ -93,9 +92,7 @@ sendTweets(Counter, UserID, UserName, ServerID) ->
     case Counter > 0 of
         true ->
             ServerID !
-                {tweets,
-                    {UserID,
-                        "User " ++ UserName ++ "tweets gibberish #HelloWorld @1"}};
+                {tweets, {UserID, "User " ++ UserName ++ "tweets gibberish #HelloWorld @1"}};
         false ->
             done
     end,
@@ -112,7 +109,9 @@ retweet_handler(UserID, UserName, ServerID) ->
                 false ->
                     ServerID !
                         {tweets,
-                            {UserID, "User:" ++ UserName ++ "#HelloWorld @1 Retweeting: " ++ ToRetweet, self()}}
+                            {UserID,
+                                "User:" ++ UserName ++ "#HelloWorld @1 Retweeting: " ++ ToRetweet,
+                                self()}}
             end
     end.
 

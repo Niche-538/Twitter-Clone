@@ -56,33 +56,33 @@ tweet_processing(UserID, Tweet) ->
     end,
 
     % Check for hashtags and mentions just like above, and add them to the hashtag and mentions table
-    {_, HX} = re:run(Tweet, "#HelloWorld"),
-    {HIndex, HLength} = lists:nth(1, HX),
-    HashtagFound = string:substr(Tweet, HIndex, HLength),
-
-    HashtagLookupTableResult = ets:lookup(hashtag_table, HashtagFound),
+    % {_, HX} = re:run(Tweet, "#HelloWorld"),
+    % {HIndex, HLength} = lists:nth(1, HX),
+    % HashtagFound = string:substr(Tweet, HIndex, HLength),
+    % ets_records:create_tables().
+    HashtagLookupTableResult = ets:lookup(hashtag_table, "#HelloWorld"),
     case HashtagLookupTableResult == [] of
         true ->
-            ets:insert(hashtag_table, {HashtagFound, [Tweet]});
+            ets:insert(hashtag_table, {"#HelloWorld", [Tweet]});
         false ->
             {_, PreviousHashtagTweetList} = lists:nth(1, HashtagLookupTableResult),
             UpdatedHashtagTweetList = lists:append(PreviousHashtagTweetList, [Tweet]),
-            ets:insert(hashtag_table, {HashtagFound, UpdatedHashtagTweetList})
+            ets:insert(hashtag_table, {"#HelloWorld", UpdatedHashtagTweetList})
     end,
 
     %  Mentions
-    {_, MX} = re:run(Tweet, "@1"),
-    {MIndex, MLength} = lists:nth(1, MX),
-    MentionFound = string:substr(Tweet, MIndex, MLength),
+    % {_, MX} = re:run(Tweet, "@1"),
+    % {MIndex, MLength} = lists:nth(1, MX),
+    % MentionFound = string:substr(Tweet, MIndex + 1, MLength),
 
-    MentionLookupTableResult = ets:lookup(mention_table, MentionFound),
+    MentionLookupTableResult = ets:lookup(mention_table, "@1"),
     case MentionLookupTableResult == [] of
         true ->
-            ets:insert(mention_table, {MentionFound, [Tweet]});
+            ets:insert(mention_table, {"@1", [Tweet]});
         false ->
             {_, PreviousMentionTweetList} = lists:nth(1, MentionLookupTableResult),
             UpdatedMentionTweetList = lists:append(PreviousMentionTweetList, [Tweet]),
-            ets:insert(hashtag_table, {MentionFound, UpdatedMentionTweetList})
+            ets:insert(mention_table, {"@1", UpdatedMentionTweetList})
     end,
 
     % Send Tweets to Subscribers
