@@ -23,7 +23,9 @@ loop() ->
             spawn(fun() -> getAllTweets(UserID, PID) end);
         {addFollower, {UserID, SubID, PID}} ->
             subscribed_to_add(UserID, SubID),
-            followers_to_add(UserID, SubID)
+            followers_to_add(UserID, SubID);
+        {disconnectUser, {UserID}} ->
+            disconnectUser(UserID)
     end,
     loop().
 
@@ -37,6 +39,9 @@ register_user(UserID, UserName, PID) ->
         false ->
             ok
     end.
+
+disconnectUser(UserID) ->
+    ets:insert(client_table, {UserID, nil}).
 
 tweet_processing(UserID, Tweet) ->
     TweetLookupTableResult = ets:lookup(tweet_table, UserID),
