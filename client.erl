@@ -2,11 +2,11 @@
 -export([client_fun/6]).
 
 client_fun(ServerID, UserID, UserName, TweetsNumber, SubscribersNumber, ExistingUser) ->
-    if
-        ExistingUser == 1 ->
+    case ExistingUser == 1 of
+        true ->
             io:fwrite("User Online: User Id: ~p User Name: ~p ~n", [UserID, UserName]),
             handle_login(UserID, UserName, ServerID);
-        true ->
+        false ->
             io:fwrite("New User Registeration. User Id: ~p User Name: ~p ~n", [UserID, UserName]),
             ServerID ! {registerUser, {UserID, UserName, self()}},
             receive
@@ -23,22 +23,20 @@ handle_login(UserID, Username, ServerID) ->
     loop(5, UserID, Username, ServerID).
 
 loop(N, UserID, UserName, ServerID) ->
-    if
-        N =< 0 ->
-            ok;
+    case N == 0 of
         true ->
-            % UniqueHash = generate_unique_hashes(UserName, N),
+            ok;
+        false ->
             ServerID !
-                {tweets,
-                    {UserID, (UserName ++ "I am Tweeting some gibberish tag #HelloWorld for @1"),
-                        self()}}
-    end,
-    loop(N - 1, UserID, UserName, ServerID).
+                {tweets, {UserID, UserName ++ "I am Tweeting some tag " ++ return_hash() ++" for @1", self()}},
+                loop(N - 1, UserID, UserName, ServerID)
+    end.
 
-% generate_unique_hashes(User, N) ->
-%     GeneratedHash = User ++ integer_to_list(N),
-%     <<HashKey:256>> = crypto:hash(sha256, GeneratedHash),
-%     _SHA_String = io_lib:format("~64.16.0b", [HashKey]).
+return_hash() ->
+    AvailableHashtags = ["#HelloWorld", "#HalaMadrid", "#DOSP", "#UFL"],
+    RandomNumber = rand:uniform(4),
+    SelectedHash = lists:nth(RandomNumber, AvailableHashtags),
+    SelectedHash.
 
 handle_client(UserID, UserName, TweetsNumber, SubscribersNumber, ServerID) ->
     %%Subscribe
@@ -51,16 +49,15 @@ handle_client(UserID, UserName, TweetsNumber, SubscribersNumber, ServerID) ->
     end,
     %%Mention
     % MentionUser = trunc(rand:uniform(UserID)),
-    ServerID !
+    % ServerID !
         %%        {tweets, {UserID, "User" ++ UserName ++ "is a friend of #HelloWorld User ID @" ++ MentionUser, self()}},
-        {tweets, {UserID, "User " ++ UserName ++ "is a friend of #HelloWorld User ID @1", self()}},
+        % {tweets, {UserID, "User " ++ UserName ++ " is a friend of User ID @1 with tag " ++ return_hash(), self()}},
 
     %% Hash tag
-    ServerID ! {tweets, {UserID, "User " ++ UserName ++ "has a hashtag #HelloWorld @1", self()}},
+    % ServerID ! {tweets, {UserID, "User " ++ UserName ++ " has a hashtag @1 of " ++ return_hash(), self()}},
 
     %%Send Tweets
-    sendTweets(TweetsNumber, UserID, UserName, ServerID),
-
+    sendTweets(TweetsNumber, UserID, UserName, ServerID, self()),
     %%Retweet
     retweet_handler(UserID, UserName, ServerID),
     % Add Retweet Time Difference
@@ -88,17 +85,18 @@ makeZipfDistribution(UserID, FollowerList, ServerID) ->
         FollowerList
     ).
 
-sendTweets(Counter, UserID, UserName, ServerID) ->
+sendTweets(Counter, UserID, UserName, ServerID, PID) ->
     case Counter > 0 of
         true ->
             ServerID !
-                {tweets, {UserID, "User " ++ UserName ++ "tweets gibberish #HelloWorld @1"}};
+                {tweets, {UserID, "I am tweeting about @1 with hashtag " ++ return_hash(), PID}},
+                sendTweets(Counter - 1, UserID, UserName, ServerID, PID);
         false ->
             done
-    end,
-    sendTweets(Counter - 1, UserID, UserName, ServerID).
+    end.
 
 retweet_handler(UserID, UserName, ServerID) ->
+    UserName,
     ServerID ! {subscribedToTweets, {UserID, self()}},
     receive
         {retweet_ack, {ReTweetList}} ->
@@ -108,10 +106,7 @@ retweet_handler(UserID, UserName, ServerID) ->
                     done;
                 false ->
                     ServerID !
-                        {tweets,
-                            {UserID,
-                                "User:" ++ UserName ++ "#HelloWorld @1 Retweeting: " ++ ToRetweet,
-                                self()}}
+                        {tweets, {UserID, "I use the hash " ++ return_hash() ++ " @1 Retweeting: " ++ ToRetweet, self()}}
             end
     end.
 

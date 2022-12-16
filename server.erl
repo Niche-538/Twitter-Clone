@@ -9,28 +9,32 @@ loop() ->
         {registerUser, {UserID, UserName, PID}} ->
             register_user(UserID, UserName, PID),
             PID ! {acknowledgement};
-        {tweets, {UserName, Tweet, PID}} ->
-            tweet_processing(UserName, Tweet);
+        {tweets, {UserID, Tweet, PID}} ->
+            PID,
+            io:fwrite("Tweet Received from ~p: ~p~n", [UserID, Tweet]),
+            tweet_processing(UserID, Tweet);
         {login, {UserID, UserName, PID}} ->
             ets:insert(client_table, {UserID, UserName, PID});
         {subscribedToTweets, {UserID, PID}} ->
             spawn(fun() -> subscribedToTweetsHandler(UserID, PID) end);
         {hashtagTweets, {Hashtag, UserID, PID}} ->
+            UserID,
             spawn(fun() -> hashtagTweetsHandler(Hashtag, PID) end);
         {mentionTweets, {UserID, PID}} ->
             spawn(fun() -> mentionTweetsHandler(UserID, PID) end);
         {getAllTweets, {UserID, PID}} ->
             spawn(fun() -> getAllTweets(UserID, PID) end);
         {addFollower, {UserID, SubID, PID}} ->
+            PID,
             subscribed_to_add(UserID, SubID),
             followers_to_add(UserID, SubID);
-        {disconnectUser, {UserID}} ->
-            disconnectUser(UserID)
+        {disconnectUser, {UserID, UserName}} ->
+            disconnectUser(UserID, UserName)
     end,
     loop().
 
 register_user(UserID, UserName, PID) ->
-    ets:insert(client_table, {UserID, PID}),
+    ets:insert(client_table, {UserID, PID, UserName}),
     ets:insert(tweet_table, {UserID, []}),
     ets:insert(subscribed_to_table, {UserID, []}),
     case ets:lookup(subscriber_table, UserID) == [] of
@@ -40,8 +44,8 @@ register_user(UserID, UserName, PID) ->
             ok
     end.
 
-disconnectUser(UserID) ->
-    ets:insert(client_table, {UserID, nil}).
+disconnectUser(UserID, UserName) ->
+    ets:insert(client_table, {UserID, nil, UserName}).
 
 tweet_processing(UserID, Tweet) ->
     TweetLookupTableResult = ets:lookup(tweet_table, UserID),
@@ -56,18 +60,18 @@ tweet_processing(UserID, Tweet) ->
     end,
 
     % Check for hashtags and mentions just like above, and add them to the hashtag and mentions table
-    % {_, HX} = re:run(Tweet, "#HelloWorld"),
-    % {HIndex, HLength} = lists:nth(1, HX),
-    % HashtagFound = string:substr(Tweet, HIndex, HLength),
+    {_, HX} = re:run(Tweet, "#+[a-zA-Z0-9(_)]{1,}"),
+    {HIndex, HLength} = lists:nth(1, HX),
+    HashtagFound = string:substr(Tweet, HIndex+1, HLength),
     % ets_records:create_tables().
-    HashtagLookupTableResult = ets:lookup(hashtag_table, "#HelloWorld"),
+    HashtagLookupTableResult = ets:lookup(hashtag_table, HashtagFound),
     case HashtagLookupTableResult == [] of
         true ->
-            ets:insert(hashtag_table, {"#HelloWorld", [Tweet]});
+            ets:insert(hashtag_table, {HashtagFound, [Tweet]});
         false ->
             {_, PreviousHashtagTweetList} = lists:nth(1, HashtagLookupTableResult),
             UpdatedHashtagTweetList = lists:append(PreviousHashtagTweetList, [Tweet]),
-            ets:insert(hashtag_table, {"#HelloWorld", UpdatedHashtagTweetList})
+            ets:insert(hashtag_table, {HashtagFound, UpdatedHashtagTweetList})
     end,
 
     %  Mentions

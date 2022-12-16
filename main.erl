@@ -15,7 +15,7 @@ createUsers(Counter, SubscriberLimit, ServerID, NumClients) ->
             ok;
         true ->
             UserID = Counter,
-            UserName = "chew" ++ integer_to_list(Counter),
+            UserName = "@tweetstar" ++ integer_to_list(Counter),
             TweetsNumber = trunc(SubscriberLimit / Counter),
             SubscribersNumber = round(trunc(SubscriberLimit / (NumClients - Counter + 1))),
             PID = spawn(client, client_fun, [
