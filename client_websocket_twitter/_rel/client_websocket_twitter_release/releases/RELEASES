@@ -1,0 +1,9 @@
+%% coding: utf-8
+[{release,"client_websocket_twitter_release","1","13.1",
+          [{kernel,"8.5","./lib/kernel-8.5"},
+           {stdlib,"4.1","./lib/stdlib-4.1"},
+           {client_websocket_twitter,"0.1.0",
+                                     "./lib/client_websocket_twitter-0.1.0"},
+           {sasl,"4.2","./lib/sasl-4.2"},
+           {runtime_tools,"1.19","./lib/runtime_tools-1.19"}],
+          permanent}].
