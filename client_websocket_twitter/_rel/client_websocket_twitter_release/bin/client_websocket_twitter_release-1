@@ -40,7 +40,7 @@ export RELEASE_NAME="client_websocket_twitter_release"
 export RELEASE_VSN="1"
 export RELEASE_PROG="${SCRIPT}"
 
-ERTS_VSN="13.1"
+ERTS_VSN="13.1.3"
 REL_DIR="$RELEASE_ROOT_DIR/releases/$REL_VSN"
 RUNNER_LOG_DIR="${RUNNER_LOG_DIR:-$RELEASE_ROOT_DIR/log}"
 export ESCRIPT_NAME="${ESCRIPT_NAME-$SCRIPT}"

@@ -1,2 +1,4 @@
 /Users/pratikkamble/Downloads/client_websocket_twitter/deps/relx
-/Users/pratikkamble/Downloads/client_websocket_twitter/deps/bbmustache
+/Users/pratikkamble/Downloads/client_websocket_twitter/deps/cowboy
+/Users/pratikkamble/Downloads/client_websocket_twitter/deps/cowlib
+/Users/pratikkamble/Downloads/client_websocket_twitter/deps/ranch

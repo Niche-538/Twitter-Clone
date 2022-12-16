@@ -6,6 +6,6 @@
 init(Req0, State) ->
 	Req = cowboy_req:reply(200,
 		#{<<"content-type">> => <<"text/plain">>},
-		<<"Hello Erlang!">>,
+		<<"Twitter Server! Waiting for clients to connect.....">>,
 		Req0),
 	{ok, Req, State}.
