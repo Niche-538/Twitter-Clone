@@ -51,7 +51,6 @@ tweet_processing(UserID, Tweet) ->
     TweetLookupTableResult = ets:lookup(tweet_table, UserID),
     case TweetLookupTableResult == [] of
         true ->
-            % UpdatedTweet = lists:append([], [Tweet]),
             ets:insert(tweet_table, {UserID, [Tweet]});
         false ->
             {_, PreviousTweetList} = lists:nth(1, TweetLookupTableResult),
@@ -67,26 +66,26 @@ tweet_processing(UserID, Tweet) ->
     HashtagLookupTableResult = ets:lookup(hashtag_table, HashtagFound),
     case HashtagLookupTableResult == [] of
         true ->
-            ets:insert(hashtag_table, {HashtagFound, [Tweet]});
+            ets:insert(hashtag_table, {HashtagFound, [Tweet, UserID]});
         false ->
             {_, PreviousHashtagTweetList} = lists:nth(1, HashtagLookupTableResult),
-            UpdatedHashtagTweetList = lists:append(PreviousHashtagTweetList, [Tweet]),
+            UpdatedHashtagTweetList = lists:append(PreviousHashtagTweetList, [Tweet, UserID]),
             ets:insert(hashtag_table, {HashtagFound, UpdatedHashtagTweetList})
     end,
 
     %  Mentions
-    % {_, MX} = re:run(Tweet, "@1"),
-    % {MIndex, MLength} = lists:nth(1, MX),
-    % MentionFound = string:substr(Tweet, MIndex + 1, MLength),
+    {_, MX} = re:run(Tweet, "@+[a-zA-Z0-9(_)]{1,}"),
+    {MIndex, MLength} = lists:nth(1, MX),
+    MentionFound = string:substr(Tweet, MIndex + 1, MLength),
 
-    MentionLookupTableResult = ets:lookup(mention_table, "@1"),
+    MentionLookupTableResult = ets:lookup(mention_table, MentionFound),
     case MentionLookupTableResult == [] of
         true ->
-            ets:insert(mention_table, {"@1", [Tweet]});
+            ets:insert(mention_table, {MentionFound, [Tweet, UserID]});
         false ->
             {_, PreviousMentionTweetList} = lists:nth(1, MentionLookupTableResult),
-            UpdatedMentionTweetList = lists:append(PreviousMentionTweetList, [Tweet]),
-            ets:insert(mention_table, {"@1", UpdatedMentionTweetList})
+            UpdatedMentionTweetList = lists:append(PreviousMentionTweetList, [Tweet, UserID]),
+            ets:insert(mention_table, {MentionFound, UpdatedMentionTweetList})
     end,
 
     % Send Tweets to Subscribers
@@ -99,7 +98,7 @@ tweet_processing(UserID, Tweet) ->
             lists:foreach(
                 fun(ID) ->
                     FindPID = ets:lookup(client_table, ID),
-                    {_, PID} = lists:nth(1, FindPID),
+                    {_, PID, _} = lists:nth(1, FindPID),
                     PID ! {ackLive, {Tweet}}
                 end,
                 SubscribersList
@@ -107,25 +106,32 @@ tweet_processing(UserID, Tweet) ->
     end.
 
 subscribedToTweetsHandler(UserID, PID) ->
-    SubscribedTo = getSubscribedTo(UserID),
-    List = generateTweetList(SubscribedTo, []),
-    PID ! {ackTweetSubscription, {List}}.
+    SubscribedToList = getSubscribedTo(UserID),
+    case SubscribedToList == [] of
+        true ->
+            done;
+        false ->
+            % io:fwrite("Subscribed To Result for ~p: ~p~n", [UserID, SubscribedToList]),
+            Listed = [],
+            TweetList = generateTweetList(SubscribedToList, Listed),
+            % io:fwrite("List of Tweets: ~p~n", [TweetList]),
+            PID ! {ackTweetSubscription, {TweetList}}
+    end.
 
 %% get list of users that USERID is subscribed to.
 getSubscribedTo(UserID) ->
     SubscribedToLookupTableResult = ets:lookup(subscribed_to_table, UserID),
-    {_, SubscribedToTweetList} = lists:nth(1, SubscribedToLookupTableResult),
-    SubscribedToTweetList.
+    {_, SubscribedToUsersList} = lists:nth(1, SubscribedToLookupTableResult),
+    SubscribedToUsersList.
 
 %% get tweets from the subscribedTo user list
-generateTweetList(SubscribedTo, List) ->
+generateTweetList(SubscribedToList, Listed) ->
     lists:foreach(
         fun(N) ->
-            lists:append(List, getTweets(N))
+            lists:append(Listed, getTweets(N))
         end,
-        SubscribedTo
-    ),
-    List.
+        SubscribedToList
+    ).
 
 %% get list of tweets a user is subscribed to
 getTweets(UserID) ->
@@ -155,13 +161,15 @@ subscribed_to_add(UserID, SubID) ->
     ets:insert(subscribed_to_table, {UserID, UpdatedList}).
 
 followers_to_add(UserID, SubID) ->
-    FollowersToAddResult = ets:lookup(subscriber_table, UserID),
-    {_, FollowersToList} = lists:nth(1, FollowersToAddResult),
-    case FollowersToList == [] of
-        true -> ets:insert(subscriber_table, []);
-        false -> ok
-    end,
-    FollowerResult = ets:lookup(subscriber_table, UserID),
-    {_, FollowerList} = lists:nth(1, FollowerResult),
-    UpdatedList = lists:append(FollowerList, [SubID]),
-    ets:insert(subscriber_table, {UserID, UpdatedList}).
+    SubID,
+    SubscribedToAddResult = ets:lookup(subscribed_to_table, UserID),
+    {_, FollowersToList} = lists:nth(1, SubscribedToAddResult),
+
+    lists:foreach(
+        fun(N) ->
+            FollowerResult = ets:lookup(subscriber_table, N),
+            {_, FollowersNewList} = lists:nth(1, FollowerResult),
+            ets:insert(subscriber_table, {UserID, FollowersNewList ++ [UserID]})
+        end,  
+        FollowersToList
+    ).

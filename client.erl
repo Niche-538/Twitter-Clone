@@ -1,6 +1,22 @@
 -module(client).
 -export([client_fun/6]).
 
+tail_len(L) ->
+    tail_len(L, 0).
+tail_len([], Acc) ->
+    Acc;
+tail_len([_ | T], Acc) ->
+    tail_len(T, Acc + 1).
+
+getListOfUsers(N, UL) ->
+    getListOfUsers(N, [], UL).
+getListOfUsers(0, L, _) ->
+    lists:reverse(L);
+getListOfUsers(N, L, UL) ->
+    U1 = lists:nth(N, UL),
+    {_, _, User} = lists:nth(1, U1),
+    getListOfUsers(N - 1, [User | L], UL).
+
 client_fun(ServerID, UserID, UserName, TweetsNumber, SubscribersNumber, ExistingUser) ->
     case ExistingUser == 1 of
         true ->
@@ -28,7 +44,7 @@ loop(N, UserID, UserName, ServerID) ->
             ok;
         false ->
             ServerID !
-                {tweets, {UserID, UserName ++ "I am Tweeting some tag " ++ return_hash() ++" for @1", self()}},
+                {tweets, {UserID, "I am Tweeting some tag " ++ return_hash() ++" for " ++ return_user(), self()}},
                 loop(N - 1, UserID, UserName, ServerID)
     end.
 
@@ -37,6 +53,17 @@ return_hash() ->
     RandomNumber = rand:uniform(4),
     SelectedHash = lists:nth(RandomNumber, AvailableHashtags),
     SelectedHash.
+
+get_users_list() ->
+    U = ets:match(client_table, '$1'),
+    L = getListOfUsers(tail_len(U), U),
+    L.
+
+return_user() ->
+    LU = get_users_list(),
+    RandomNumber = rand:uniform(tail_len(LU)),
+    SelectedUser = lists:nth(RandomNumber, LU),
+    SelectedUser.
 
 handle_client(UserID, UserName, TweetsNumber, SubscribersNumber, ServerID) ->
     %%Subscribe
@@ -47,17 +74,10 @@ handle_client(UserID, UserName, TweetsNumber, SubscribersNumber, ServerID) ->
         false ->
             done
     end,
-    %%Mention
-    % MentionUser = trunc(rand:uniform(UserID)),
-    % ServerID !
-        %%        {tweets, {UserID, "User" ++ UserName ++ "is a friend of #HelloWorld User ID @" ++ MentionUser, self()}},
-        % {tweets, {UserID, "User " ++ UserName ++ " is a friend of User ID @1 with tag " ++ return_hash(), self()}},
-
-    %% Hash tag
-    % ServerID ! {tweets, {UserID, "User " ++ UserName ++ " has a hashtag @1 of " ++ return_hash(), self()}},
 
     %%Send Tweets
     sendTweets(TweetsNumber, UserID, UserName, ServerID, self()),
+
     %%Retweet
     retweet_handler(UserID, UserName, ServerID),
     % Add Retweet Time Difference
@@ -66,6 +86,7 @@ handle_client(UserID, UserName, TweetsNumber, SubscribersNumber, ServerID) ->
     subscription_query_handler(UserID, UserName, ServerID),
     hashtag_query_handler("#HelloWorld", UserID, UserName, ServerID),
     mention_query_handler(UserID, UserName, ServerID),
+
     %%Get all Tweets
     getAllTweets(UserID, UserName, ServerID),
     %%Live View
@@ -89,7 +110,7 @@ sendTweets(Counter, UserID, UserName, ServerID, PID) ->
     case Counter > 0 of
         true ->
             ServerID !
-                {tweets, {UserID, "I am tweeting about @1 with hashtag " ++ return_hash(), PID}},
+                {tweets, {UserID, "I am tweeting about " ++ return_user() ++ " with hashtag " ++ return_hash(), PID}},
                 sendTweets(Counter - 1, UserID, UserName, ServerID, PID);
         false ->
             done
@@ -106,7 +127,7 @@ retweet_handler(UserID, UserName, ServerID) ->
                     done;
                 false ->
                     ServerID !
-                        {tweets, {UserID, "I use the hash " ++ return_hash() ++ " @1 Retweeting: " ++ ToRetweet, self()}}
+                        {tweets, {UserID, "I use the hash " ++ return_hash() ++ " for " ++ return_user() ++ " Retweeting: " ++ ToRetweet, self()}}
             end
     end.
 

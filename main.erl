@@ -4,20 +4,21 @@
 main(NumClients, SubscriberLimit, OfflineClientsPercentage) ->
     %%Create Server Engine Node
     ServerID = spawn(server, server_fun, []),
-    io:fwrite("Server ID: ~p~n", [ServerID]),
+    % io:fwrite("Server ID: ~p~n", [ServerID]),
     OfflineClients = (OfflineClientsPercentage * 0.01) * NumClients,
     createUsers(NumClients, SubscriberLimit, ServerID, NumClients),
     offlineSimulation(NumClients, OfflineClients, ServerID).
 
 createUsers(Counter, SubscriberLimit, ServerID, NumClients) ->
-    if
-        Counter == 0 ->
-            ok;
+    case Counter == 0 of
         true ->
+            ok;
+        false ->
             UserID = Counter,
             UserName = "@tweetstar" ++ integer_to_list(Counter),
             TweetsNumber = trunc(SubscriberLimit / Counter),
-            SubscribersNumber = round(trunc(SubscriberLimit / (NumClients - Counter + 1))),
+            SubscribersNumber = round(trunc(SubscriberLimit / (NumClients - Counter + 1))) + 1,
+            % io:fwrite("UID ~p TN ~p SN ~p", [UserName, TweetsNumber, SubscribersNumber]),
             PID = spawn(client, client_fun, [
                 ServerID, UserID, UserName, TweetsNumber, SubscribersNumber, 0
             ]),
