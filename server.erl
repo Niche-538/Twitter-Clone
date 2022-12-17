@@ -111,10 +111,8 @@ subscribedToTweetsHandler(UserID, PID) ->
         true ->
             done;
         false ->
-            % io:fwrite("Subscribed To Result for ~p: ~p~n", [UserID, SubscribedToList]),
             Listed = [],
             TweetList = generateTweetList(SubscribedToList, Listed),
-            % io:fwrite("List of Tweets: ~p~n", [TweetList]),
             PID ! {ackTweetSubscription, {TweetList}}
     end.
 
@@ -162,14 +160,7 @@ subscribed_to_add(UserID, SubID) ->
 
 followers_to_add(UserID, SubID) ->
     SubID,
-    SubscribedToAddResult = ets:lookup(subscribed_to_table, UserID),
+    SubscribedToAddResult = ets:lookup(subscriber_table, SubID),
     {_, FollowersToList} = lists:nth(1, SubscribedToAddResult),
-
-    lists:foreach(
-        fun(N) ->
-            FollowerResult = ets:lookup(subscriber_table, N),
-            {_, FollowersNewList} = lists:nth(1, FollowerResult),
-            ets:insert(subscriber_table, {UserID, FollowersNewList ++ [UserID]})
-        end,  
-        FollowersToList
-    ).
+    UpdatedSubscriberList = lists:append(FollowersToList, [UserID]),
+    ets:insert(subscriber_table, {SubID, UpdatedSubscriberList}).

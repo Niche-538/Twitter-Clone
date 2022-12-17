@@ -20,10 +20,10 @@ getListOfUsers(N, L, UL) ->
 client_fun(ServerID, UserID, UserName, TweetsNumber, SubscribersNumber, ExistingUser) ->
     case ExistingUser == 1 of
         true ->
-            io:fwrite("User Online: User Id: ~p User Name: ~p ~n", [UserID, UserName]),
+            % io:fwrite("User Online: User Id: ~p User Name: ~p ~n", [UserID, UserName]),
             handle_login(UserID, UserName, ServerID);
         false ->
-            io:fwrite("New User Registeration. User Id: ~p User Name: ~p ~n", [UserID, UserName]),
+            % io:fwrite("New User Registeration. User Id: ~p User Name: ~p ~n", [UserID, UserName]),
             ServerID ! {registerUser, {UserID, UserName, self()}},
             receive
                 {acknowledgement} ->
