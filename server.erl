@@ -11,7 +11,7 @@ loop() ->
             PID ! {acknowledgement};
         {tweets, {UserID, Tweet, PID}} ->
             PID,
-            io:fwrite("Tweet Received from ~p: ~p~n", [UserID, Tweet]),
+            % io:fwrite("Tweet Received from ~p: ~p~n", [UserID, Tweet]),
             tweet_processing(UserID, Tweet);
         {login, {UserID, UserName, PID}} ->
             ets:insert(client_table, {UserID, UserName, PID});
@@ -32,6 +32,13 @@ loop() ->
             disconnectUser(UserID, UserName)
     end,
     loop().
+
+tail_len(L) ->
+    tail_len(L, 0).
+tail_len([], Acc) ->
+    Acc;
+tail_len([_ | T], Acc) ->
+    tail_len(T, Acc + 1).
 
 register_user(UserID, UserName, PID) ->
     ets:insert(client_table, {UserID, PID, UserName}),
@@ -111,8 +118,9 @@ subscribedToTweetsHandler(UserID, PID) ->
         true ->
             done;
         false ->
-            Listed = [],
-            TweetList = generateTweetList(SubscribedToList, Listed),
+            LL = [],
+            TweetList = generateTweetList(SubscribedToList, LL, tail_len(SubscribedToList)),
+            io:fwrite("Subscribed To List for ~p: ~p~nTweet list for ~p: ~p~n", [UserID, SubscribedToList, UserID, TweetList]),
             PID ! {ackTweetSubscription, {TweetList}}
     end.
 
@@ -123,13 +131,14 @@ getSubscribedTo(UserID) ->
     SubscribedToUsersList.
 
 %% get tweets from the subscribedTo user list
-generateTweetList(SubscribedToList, Listed) ->
-    lists:foreach(
-        fun(N) ->
-            lists:append(Listed, getTweets(N))
-        end,
-        SubscribedToList
-    ).
+generateTweetList(SubscribedToList, Listed, Len) ->
+    case Len == 0 of
+        true -> Listed;
+        false ->
+            GT = getTweets(lists:nth(Len, SubscribedToList)),
+            generateTweetList(SubscribedToList, Listed ++ GT, Len - 1)
+    end.
+
 
 %% get list of tweets a user is subscribed to
 getTweets(UserID) ->
