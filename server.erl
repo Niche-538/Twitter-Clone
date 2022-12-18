@@ -69,7 +69,6 @@ tweet_processing(UserID, Tweet) ->
     {_, HX} = re:run(Tweet, "#+[a-zA-Z0-9(_)]{1,}"),
     {HIndex, HLength} = lists:nth(1, HX),
     HashtagFound = string:substr(Tweet, HIndex+1, HLength),
-    % ets_records:create_tables().
     HashtagLookupTableResult = ets:lookup(hashtag_table, HashtagFound),
     case HashtagLookupTableResult == [] of
         true ->
@@ -116,11 +115,10 @@ subscribedToTweetsHandler(UserID, PID) ->
     SubscribedToList = getSubscribedTo(UserID),
     case SubscribedToList == [] of
         true ->
-            done;
+            PID ! {ackTweetSubscription, {[]}};
         false ->
-            LL = [],
-            TweetList = generateTweetList(SubscribedToList, LL, tail_len(SubscribedToList)),
-            io:fwrite("Subscribed To List for ~p: ~p~nTweet list for ~p: ~p~n", [UserID, SubscribedToList, UserID, TweetList]),
+            TweetList = generateTweetList(SubscribedToList, [], tail_len(SubscribedToList)),
+            io:fwrite("Subscribed To List for ~p: ~p~nTweet list for ~p: ~p~n", [UserID, SubscribedToList, PID, TweetList]),
             PID ! {ackTweetSubscription, {TweetList}}
     end.
 
@@ -138,7 +136,6 @@ generateTweetList(SubscribedToList, Listed, Len) ->
             GT = getTweets(lists:nth(Len, SubscribedToList)),
             generateTweetList(SubscribedToList, Listed ++ GT, Len - 1)
     end.
-
 
 %% get list of tweets a user is subscribed to
 getTweets(UserID) ->

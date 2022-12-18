@@ -134,14 +134,13 @@ retweet_handler(UserID, UserName, ServerID) ->
 subscription_query_handler(UserID, UserName, ServerID) ->
     ServerID ! {subscribedToTweets, {UserID, self()}},
     receive
-        {ackTweetSubscription, {ListOfTweets}} ->
-            case ListOfTweets == [] of
+        {ackTweetSubscription, {TweetList}} ->
+            io:fwrite("Ack Tweet Susbcription for ~p: ~p~n", [UserID, TweetList]),
+            case TweetList == [] of
                 true ->
                     done;
                 false ->
-                    io:fwrite("User Name: ~p Subscribed Tweets: ~n ~p ~n~n", [
-                        UserName, ListOfTweets
-                    ])
+                    io:fwrite("User Name: ~p Subscribed Tweets: ~n ~p ~n~n", [UserName, TweetList])
             end
     end.
 
