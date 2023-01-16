@@ -20,12 +20,12 @@ In this project, we have implemented Twitter Like Engine with the following feat
 
 ### Steps to run the code:
 To run the code run following commands:
-•	c(ets_records).
-•	c(main).
-•	c(server).
-•	c(client).
-•	ets_records:create_tables().
-•	main:main(NumofClients, SubscriberLimit, OfflineClientPercentage).
+1. c(ets_records).
+2. c(main).
+3. c(server).
+4. c(client).
+5. ets_records:create_tables().
+6. main:main(NumofClients, SubscriberLimit, OfflineClientPercentage).
 
 ### Architecture:
 The architecture consist of following elements:
